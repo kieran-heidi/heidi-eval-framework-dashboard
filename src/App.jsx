@@ -136,7 +136,7 @@ function OverviewTab({ onNavigate }) {
               <Badge color="purple">LLM judges</Badge>{" "}
               <Badge color="green">BERT / ROUGE</Badge>{" "}
               <Badge color="green">Side-by-side</Badge>{" "}
-              <Badge color="green">CSAT</Badge>
+              <Badge color="green">CSAT (supplementary)</Badge>
             </div>
             <div className="mt-3 pt-3 border-t border-amber-200 text-xs text-amber-700">
               <span className="font-medium">Platforms:</span> Databricks, IA Experiments
@@ -250,6 +250,9 @@ function OverviewTab({ onNavigate }) {
             </div>
           </div>
           <p className="text-xs text-gray-500 text-center mt-4">Graduation is a decision, not a pipeline. When a judge proves useful in IA Experiments, the relevant team implements it in Databricks or engineering scripts. Judge prompt and backing model must stay consistent across all platforms.</p>
+          <div className="mt-3 bg-white rounded p-3 border border-gray-200 text-xs text-gray-600">
+            <span className="font-medium text-gray-700">Retrospective backfill:</span> When graduating a judge to Databricks, apply it retrospectively to historical production data to establish baselines. Sequence: (1) develop and validate in IA Experiments, (2) implement in Databricks, (3) run retrospective backfill, (4) transition to prospective continuous monitoring.
+          </div>
         </div>
       </div>
 
@@ -258,14 +261,32 @@ function OverviewTab({ onNavigate }) {
         <SectionCard title="Key links" accent="border-l-gray-400">
           <div className="space-y-2 text-sm">
             <div><ExtLink href={LINKS.linear}>Linear: LLM Evaluations - Offline & Online</ExtLink></div>
-            <div><ExtLink href={LINKS.clinicalNoteEval}>Linear: Clinical Note Evaluation System</ExtLink> <Badge color="amber">WIP</Badge></div>
+            <div><ExtLink href={LINKS.clinicalNoteEval}>Linear: Clinical Note Evaluation System (Rohan)</ExtLink> <Badge color="amber">WIP</Badge></div>
             <div><ExtLink href={LINKS.mod844}>MOD-844: Databricks monitoring (holding ticket)</ExtLink></div>
             <div><ExtLink href={LINKS.notionOverview}>Notion: Evaluations Framework Overview</ExtLink></div>
           </div>
         </SectionCard>
-        <SectionCard title="Core design principle" accent="border-l-gray-400">
-          <p className="text-sm text-gray-700">The same metrics used in production monitoring are used in pre-deployment testing, so results are directly comparable across stages. Consistent framework first, judge validation second.</p>
+        <SectionCard title="Core design principles" accent="border-l-gray-400">
+          <div className="space-y-2 text-sm text-gray-700">
+            <p>The same metrics used in production monitoring are used in pre-deployment testing, so results are directly comparable across stages.</p>
+            <p><span className="font-medium">Two-phase judge validation:</span> Near-term, deploy defensible metrics with "finger prick test" validation (manually verify over a few sessions, confirm sensible behaviour). Longer-term, more rigorous validation: perturbation testing, human annotation comparison, and external research.</p>
+          </div>
         </SectionCard>
+      </div>
+
+      {/* Notable future items */}
+      <div className="bg-gray-50 rounded-xl border border-gray-200 p-5">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Notable future roadmap items</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded p-3 border border-gray-200 text-sm">
+            <div className="font-medium text-gray-800 mb-1">Concordance analysis</div>
+            <div className="text-gray-600">Correlate judge signals (CEEV, safety judges) with user-reported signals (Intercom, CSAT, session reviews) to identify gaps where evaluation methods aren't capturing what users experience. "Does the signal match the noise?"</div>
+          </div>
+          <div className="bg-white rounded p-3 border border-gray-200 text-sm">
+            <div className="font-medium text-gray-800 mb-1">Fine-tuning feedback loop</div>
+            <div className="text-gray-600">Use evaluation outputs to inform fine-tuning - which sessions to include in training data, what "safe" looks like as a training signal. Sources: Heidi Verify feedback, session review labels, judge outputs.</div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -514,11 +535,12 @@ function StagesTab() {
       name: "Canary release",
       color: "amber",
       purpose: "Controlled real-world rollout to validate development results hold in production conditions, and to gather user preference data.",
-      available: ["All pre-deployment metrics", "BERT / ROUGE scores (users now editing)", "Side-by-side comparisons", "CSAT (thumbs up/down)"],
+      available: ["All pre-deployment metrics", "BERT / ROUGE scores (users now editing)", "Side-by-side comparisons", "CSAT (supplementary - directional check, not same tier as safety/accuracy judges)"],
       notAvailable: [],
       how: "Serve to canary group (typically free users or beta testers in less regulated markets). Compare continuous metrics against both pre-deployment results and production baseline. User preference data provides additional signal.",
       platforms: ["Databricks", "IA Experiments"],
       threshold: "Canary data consistent with pre-deployment expectations and user preference neutral-to-positive.",
+      extra: "CSAT is a user signal, not an evaluation method. It conflates safety and preference - a thumbs-down might mean \"this note is dangerous\" or \"I don't like the formatting.\" It's useful as a directional check during canary, but it's not on the same tier as CEEV, safety judges, or BERT/ROUGE. The framework treats it as supplementary context that informs the overall picture, not as a metric that gates promotion decisions on its own.",
     },
     {
       num: 3,
@@ -530,6 +552,7 @@ function StagesTab() {
       how: "Daily automated runs on a sample of production data. Results segmented by model (and potentially specialty/region). Detect degradation early. Feed into PMS reports.",
       platforms: ["Databricks + Omni"],
       threshold: "Promoted models continue to perform consistently with what was observed during development and canary phases.",
+      extra: "Sampling enrichment (future): support targeted oversampling of sessions with additional signal - CSAT feedback, Notion reviews, Intercom complaints - for richer evaluation data. Also serves a reactive purpose: when a specific safety incident arises (e.g. MHRA investigation), the same tools can run retrospectively against historical data for incident-specific analysis and root cause investigation.",
     },
   ];
 
@@ -636,6 +659,12 @@ function StagesTab() {
             {s.threshold && (
               <div className={`mt-4 pt-3 border-t ${c.divider} text-sm text-gray-600`}>
                 <span className="font-medium">Threshold:</span> {s.threshold}
+              </div>
+            )}
+
+            {s.extra && (
+              <div className="mt-3 bg-white bg-opacity-60 rounded p-3 text-sm text-gray-600 border border-gray-200">
+                {s.extra}
               </div>
             )}
           </div>
@@ -814,6 +843,9 @@ function PlatformsTab() {
             <div className="bg-orange-50 rounded p-3 text-sm text-orange-800">
               <span className="font-medium">Key constraint:</span> Must include the minimum required PMS metrics so that development results are directly comparable to production baselines.
             </div>
+          </div>
+          <div className="mt-3 bg-amber-50 rounded p-3 text-sm text-amber-800 border border-amber-200">
+            <span className="font-medium">Open question:</span> Should pre-deployment test results from engineering scripts also flow into Databricks, giving a single place to compare pre- and post-deployment metrics side by side? This would simplify comparison but blurs the boundary between platforms. Either way, there must be a clear distinction between pre- and post-deployment results in whatever system stores them.
           </div>
         </div>
       </div>
