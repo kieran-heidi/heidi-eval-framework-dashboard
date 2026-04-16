@@ -1109,13 +1109,12 @@ function TeamsTab() {
 
 /* ───────── PASSWORD GATE ───────── */
 
-const PASS_HASH = "a]T9#kV2xR";
 function hashPass(s) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
   return h;
 }
-const EXPECTED = hashPass("HeidiT0them00n");
+const EXPECTED = -207777883;
 
 function PasswordGate({ children }) {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("ef_auth") === "1");
