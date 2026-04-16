@@ -1107,6 +1107,63 @@ function TeamsTab() {
   );
 }
 
+/* ───────── PASSWORD GATE ───────── */
+
+const PASS_HASH = "a]T9#kV2xR";
+function hashPass(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
+}
+const EXPECTED = hashPass("HeidiT0them00n");
+
+function PasswordGate({ children }) {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem("ef_auth") === "1");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+
+  if (authed) return children;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (hashPass(password) === EXPECTED) {
+      sessionStorage.setItem("ef_auth", "1");
+      setAuthed(true);
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 w-full max-w-sm">
+        <div className="text-center mb-6">
+          <h1 className="text-xl font-bold text-gray-900">Heidi Evaluations Framework</h1>
+          <p className="text-sm text-gray-500 mt-1">Enter the password to view the dashboard.</p>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            autoFocus
+            className={`w-full px-4 py-2.5 rounded-lg border ${error ? "border-red-400 bg-red-50" : "border-gray-300"} text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+          />
+          {error && <p className="text-xs text-red-600 mt-1.5">Incorrect password.</p>}
+          <button
+            type="submit"
+            className="w-full mt-4 px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            Enter
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── MAIN APP ───────── */
 
 export default function EvalFrameworkDashboard() {
@@ -1118,6 +1175,7 @@ export default function EvalFrameworkDashboard() {
   };
 
   return (
+    <PasswordGate>
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
@@ -1163,5 +1221,6 @@ export default function EvalFrameworkDashboard() {
         Last updated: April 2026. Source: evaluations-framework/framework-overview.md
       </div>
     </div>
+    </PasswordGate>
   );
 }
