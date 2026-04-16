@@ -11,7 +11,9 @@ const TABS = [
 
 const LINKS = {
   linear: "https://linear.app/getheidi/project/llm-evaluations-offline-and-online-7f3bbf2a5568",
+  clinicalNoteEval: "https://linear.app/getheidi/project/clinical-note-evaluation-system-bc7562322ed3/overview",
   mod844: "https://linear.app/getheidi/issue/MOD-844",
+  notionOverview: "https://www.notion.so/heidihealth/Evaluations-Framework-Overview-344ca630286e8062aaf4f264855dc447",
   databricks: "#platforms",
   iaExperiments: "#platforms",
   omni: "#platforms",
@@ -256,7 +258,9 @@ function OverviewTab({ onNavigate }) {
         <SectionCard title="Key links" accent="border-l-gray-400">
           <div className="space-y-2 text-sm">
             <div><ExtLink href={LINKS.linear}>Linear: LLM Evaluations - Offline & Online</ExtLink></div>
+            <div><ExtLink href={LINKS.clinicalNoteEval}>Linear: Clinical Note Evaluation System</ExtLink> <Badge color="amber">WIP</Badge></div>
             <div><ExtLink href={LINKS.mod844}>MOD-844: Databricks monitoring (holding ticket)</ExtLink></div>
+            <div><ExtLink href={LINKS.notionOverview}>Notion: Evaluations Framework Overview</ExtLink></div>
           </div>
         </SectionCard>
         <SectionCard title="Core design principle" accent="border-l-gray-400">
